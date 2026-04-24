@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI CV Oluşturucu — Profesyonel CV'ni Saniyeler İçinde Hazırla</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9f8f6;
+      --surface: #ffffff;
+      --border: #e5e3dc;
+      --border-strong: #ccc9be;
+      --text: #1a1916;
+      --muted: #6b6960;
+      --accent: #1a1916;
+      --accent-light: #f0efe9;
+      --green: #0f6e56;
+      --green-light: #e1f5ee;
+      --red: #a32d2d;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--green); }
+    .nav-badge {
+      font-family: sans-serif;
+      font-size: 12px;
+      background: var(--green-light);
+      color: var(--green);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-family: sans-serif;
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.6;
+    }
+    .trust-badges {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .trust-badges span::before { content: "✓ "; color: var(--green); font-weight: 700; }
+
+    /* MAIN LAYOUT */
+    .main {
+      max-width: 760px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* STEPS */
+    .steps {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 0;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--surface);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .step-circle.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+    .step-circle.done {
+      border-color: var(--green);
+      background: var(--green);
+      color: white;
+    }
+    .step-label {
+      font-family: sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      display: none;
+    }
+    @media (min-width: 500px) { .step-label { display: block; } }
+    .step-label.active { color: var(--text); font-weight: 600; }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.3px;
+    }
+    .card-subtitle {
+      font-family: sans-serif;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* FORM */
+    .field-row { display: grid; gap: 12px; margin-bottom: 12px; }
+    .field-row.two { grid-template-columns: 1fr 1fr; }
+    .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 500px) {
+      .field-row.two, .field-row.three { grid-template-columns: 1fr; }
+    }
+    label {
+      font-family: sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      background: white;
+    }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+    /* EXPERIENCE ITEMS */
+    .exp-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 10px;
+      background: var(--bg);
+      position: relative;
+    }
+    .exp-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--red);
+      font-size: 18px;
+      line-height: 1;
+      padding: 0;
+    }
+    .add-more {
+      font-family: sans-serif;
+      font-size: 13px;
+      color: var(--green);
+      background: var(--green-light);
+      border: 1px dashed var(--green);
+      border-radius: var(--radius);
+      padding: 10px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 4px;
+      transition: opacity 0.2s;
+    }
+    .add-more:hover { opacity: 0.8; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .btn-primary {
+      flex: 1;
+      padding: 13px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-family: sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-secondary {
+      padding: 13px 20px;
+      background: none;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-family: sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: var(--accent-light); }
+    .btn-green {
+      flex: 1;
+      padding: 13px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-family: sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-green:hover { opacity: 0.88; }
+
+    /* RESULT */
+    .result-wrapper { display: none; }
+    .result-wrapper.show { display: block; }
+    .result-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      white-space: pre-wrap;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .loading-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-family: sans-serif;
+      color: var(--muted);
+    }
+    .loading-state .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* HIDDEN */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">CV<span>AI</span></div>
+  <div class="nav-badge">Ücretsiz Demo</div>
+</nav>
+
+<div class="hero">
+  <h1>Yapay Zeka ile<br/>Profesyonel CV'ni Oluştur</h1>
+  <p>Bilgilerini gir, saniyeler içinde ATS uyumlu, işe alım uzmanlarını etkileyen CV'ni al.</p>
+  <div class="trust-badges">
+    <span>ATS Uyumlu</span>
+    <span>Türkçe & İngilizce</span>
+    <span>PDF İndir</span>
+    <span>2 Dakikada Hazır</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-circle active" id="sc1">1</div>
+      <span class="step-label active" id="sl1">Kişisel bilgiler</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc2">2</div>
+      <span class="step-label" id="sl2">Deneyim</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc3">3</div>
+      <span class="step-label" id="sl3">Eğitim & Beceriler</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc4">4</div>
+      <span class="step-label" id="sl4">CV'ni Al</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: KİŞİSEL -->
+  <div class="section active" id="sec1">
+    <div class="card">
+      <div class="card-title">Kişisel bilgiler</div>
+      <div class="card-subtitle">Temel iletişim bilgilerin</div>
+      <div class="field-row two">
+        <div><label>Ad</label><input type="text" id="ad" placeholder="Ahmet" /></div>
+        <div><label>Soyad</label><input type="text" id="soyad" placeholder="Yılmaz" /></div>
+      </div>
+      <div class="field-row two">
+        <div><label>E-posta</label><input type="email" id="email" placeholder="ahmet@email.com" /></div>
+        <div><label>Telefon</label><input type="tel" id="tel" placeholder="+90 555 000 00 00" /></div>
+      </div>
+      <div class="field-row two">
+        <div><label>Şehir</label><input type="text" id="sehir" placeholder="İstanbul" /></div>
+        <div><label>LinkedIn (opsiyonel)</label><input type="url" id="linkedin" placeholder="linkedin.com/in/..." /></div>
+      </div>
+      <div class="field-row">
+        <div><label>Hedef pozisyon</label><input type="text" id="pozisyon" placeholder="Örn: Frontend Developer, Pazarlama Uzmanı, Grafik Tasarımcı..." /></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="goTo(2)">Devam Et →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: DENEYİM -->
+  <div class="section" id="sec2">
+    <div class="card">
+      <div class="card-title">İş deneyimi</div>
+      <div class="card-subtitle">Geçmiş iş deneyimlerini ekle (birden fazla olabilir)</div>
+      <div id="exp-list"></div>
+      <button class="add-more" onclick="addExp()">+ Başka bir iş deneyimi ekle</button>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(1)">← Geri</button>
+        <button class="btn-primary" onclick="goTo(3)">Devam Et →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: EĞİTİM -->
+  <div class="section" id="sec3">
+    <div class="card">
+      <div class="card-title">Eğitim & Beceriler</div>
+      <div class="card-subtitle">Eğitim geçmişin ve sahip olduğun beceriler</div>
+      <div id="edu-list"></div>
+      <button class="add-more" onclick="addEdu()">+ Eğitim ekle</button>
+      <div class="field-row" style="margin-top: 1.5rem;">
+        <div>
+          <label>Beceriler <span style="font-weight:400; text-transform:none;">(virgülle ayır)</span></label>
+          <input type="text" id="beceriler" placeholder="Örn: Python, Adobe XD, İngilizce (C1), Proje yönetimi, Takım çalışması..." />
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>Sertifika / Ödül (opsiyonel)</label>
+          <input type="text" id="sertifika" placeholder="Örn: Google Analytics Sertifikası, Hackathon 1.lik, vb." />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(2)">← Geri</button>
+        <button class="btn-primary" onclick="goTo(4)">Devam Et →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: OLUŞTUR -->
+  <div class="section" id="sec4">
+    <div class="card">
+      <div class="card-title">CV'ni oluştur</div>
+      <div class="card-subtitle">Tercihlerini seç ve yapay zeka CV'ni yazsın</div>
+      <div class="field-row two">
+        <div>
+          <label>CV Dili</label>
+          <select id="dil">
+            <option value="Türkçe">Türkçe</option>
+            <option value="İngilizce">İngilizce</option>
+          </select>
+        </div>
+        <div>
+          <label>Ton</label>
+          <select id="ton">
+            <option value="profesyonel ve resmi">Profesyonel & Resmi</option>
+            <option value="dinamik ve enerjik">Dinamik & Enerjik</option>
+            <option value="yaratıcı ve özgün">Yaratıcı & Özgün</option>
+            <option value="teknik ve detaylı">Teknik & Detaylı</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="goTo(3)">← Geri</button>
+        <button class="btn-primary" id="genBtn" onclick="generateCV()">✨ Yapay Zeka ile CV Oluştur</button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-wrapper" id="resultWrapper">
+      <div id="loadingState" class="loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <p>Yapay zeka CV'nizi yazıyor...</p>
+        <p style="font-size:12px; margin-top:8px; color:#aaa;">Bu işlem 10-20 saniye sürebilir</p>
+      </div>
+      <div id="cvOutput" style="display:none;">
+        <div class="card-title" style="margin-bottom:1rem;">CV'niz hazır! 🎉</div>
+        <div class="result-box" id="cvText"></div>
+        <div class="result-actions">
+          <button class="btn-green" onclick="downloadPDF()">⬇ PDF olarak indir</button>
+          <button class="btn-secondary" onclick="copyCV()">Kopyala</button>
+          <button class="btn-secondary" onclick="generateCV()">Yenile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>CV<strong>AI</strong> — Yapay zeka destekli CV oluşturucu &nbsp;•&nbsp; 2024</p>
+  <p style="margin-top:6px;">Tüm veriler tarayıcınızda işlenir, hiçbir şey sunucuya gönderilmez.</p>
+</footer>
+
+<script>
+  let expCount = 0, eduCount = 0, currentStep = 1;
+  let lastCV = '';
+
+  function goTo(step) {
+    document.getElementById('sec' + currentStep).classList.remove('active');
+    ['sc','sl'].forEach(p => {
+      const el = document.getElementById(p + currentStep);
+      el.classList.remove('active');
+      if (step > currentStep) el.classList.add('done');
+    });
+    currentStep = step;
+    document.getElementById('sec' + step).classList.add('active');
+    document.getElementById('sc' + step).classList.add('active');
+    document.getElementById('sl' + step).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function addExp(n) {
+    expCount++;
+    const id = expCount;
+    const div = document.createElement('div');
+    div.className = 'exp-block';
+    div.id = 'exp' + id;
+    div.innerHTML = `
+      <div class="exp-block-header">
+        <span>Deneyim ${id}</span>
+        <button class="remove-btn" onclick="this.closest('.exp-block').remove()">×</button>
+      </div>
+      <div class="field-row two">
+        <div><label>Şirket Adı</label><input type="text" id="exp_s_${id}" placeholder="Şirket A.Ş." /></div>
+        <div><label>Pozisyon / Ünvan</label><input type="text" id="exp_p_${id}" placeholder="Yazılım Geliştirici" /></div>
+      </div>
+      <div class="field-row two">
+        <div><label>Başlangıç</label><input type="text" id="exp_b_${id}" placeholder="Ocak 2022" /></div>
+        <div><label>Bitiş</label><input type="text" id="exp_e_${id}" placeholder="Devam ediyor" /></div>
+      </div>
+      <div class="field-row">
+        <div><label>Görevler & Başarılar</label><textarea id="exp_d_${id}" placeholder="Yaptığın işleri ve önemli başarılarını yaz. Ne kadar detaylı olursa CV o kadar güçlü olur."></textarea></div>
+      </div>`;
+    document.getElementById('exp-list').appendChild(div);
+  }
+
+  function addEdu() {
+    eduCount++;
+    const id = eduCount;
+    const div = document.createElement('div');
+    div.className = 'exp-block';
+    div.id = 'edu' + id;
+    div.innerHTML = `
+      <div class="exp-block-header">
+        <span>Eğitim ${id}</span>
+        <button class="remove-btn" onclick="this.closest('.exp-block').remove()">×</button>
+      </div>
+      <div class="field-row two">
+        <div><label>Okul / Üniversite</label><input type="text" id="edu_o_${id}" placeholder="İstanbul Üniversitesi" /></div>
+        <div><label>Bölüm</label><input type="text" id="edu_b_${id}" placeholder="İşletme" /></div>
+      </div>
+      <div class="field-row two">
+        <div><label>Mezuniyet Yılı</label><input type="text" id="edu_y_${id}" placeholder="2023" /></div>
+        <div><label>Not Ortalaması (opsiyonel)</label><input type="text" id="edu_n_${id}" placeholder="3.2 / 4.0" /></div>
+      </div>`;
+    document.getElementById('edu-list').appendChild(div);
+  }
+
+  function collectData() {
+    const exps = [];
+    for (let i = 1; i <= expCount; i++) {
+      if (!document.getElementById('exp' + i)) continue;
+      exps.push({
+        sirket: document.getElementById('exp_s_' + i)?.value || '',
+        pozisyon: document.getElementById('exp_p_' + i)?.value || '',
+        baslangic: document.getElementById('exp_b_' + i)?.value || '',
+        bitis: document.getElementById('exp_e_' + i)?.value || '',
+        desc: document.getElementById('exp_d_' + i)?.value || ''
+      });
+    }
+    const edus = [];
+    for (let i = 1; i <= eduCount; i++) {
+      if (!document.getElementById('edu' + i)) continue;
+      edus.push({
+        okul: document.getElementById('edu_o_' + i)?.value || '',
+        bolum: document.getElementById('edu_b_' + i)?.value || '',
+        yil: document.getElementById('edu_y_' + i)?.value || '',
+        not: document.getElementById('edu_n_' + i)?.value || ''
+      });
+    }
+    return {
+      ad: document.getElementById('ad').value,
+      soyad: document.getElementById('soyad').value,
+      email: document.getElementById('email').value,
+      tel: document.getElementById('tel').value,
+      sehir: document.getElementById('sehir').value,
+      linkedin: document.getElementById('linkedin').value,
+      pozisyon: document.getElementById('pozisyon').value,
+      beceriler: document.getElementById('beceriler').value,
+      sertifika: document.getElementById('sertifika').value,
+      dil: document.getElementById('dil').value,
+      ton: document.getElementById('ton').value,
+      exps, edus
+    };
+  }
+
+  async function generateCV() {
+    const data = collectData();
+    const btn = document.getElementById('genBtn');
+    btn.disabled = true;
+    btn.textContent = 'Oluşturuluyor...';
+
+    document.getElementById('resultWrapper').classList.add('show');
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('cvOutput').style.display = 'none';
+
+    const expStr = data.exps.length
+      ? data.exps.map(e => `• ${e.pozisyon} — ${e.sirket} (${e.baslangic} – ${e.bitis})\n  ${e.desc}`).join('\n\n')
+      : 'Deneyim girilmedi.';
+
+    const eduStr = data.edus.length
+      ? data.edus.map(e => `• ${e.bolum}, ${e.okul} (${e.yil})${e.not ? ' | Not: ' + e.not : ''}`).join('\n')
+      : 'Eğitim girilmedi.';
+
+    const prompt = `Sen dünyanın en iyi profesyonel CV yazarısın. Aşağıdaki bilgilere göre ${data.dil} dilinde, ${data.ton} tonda, ATS (Applicant Tracking System) uyumlu, işe alım uzmanlarını etkileyen mükemmel bir CV oluştur.
+
+KİŞİSEL BİLGİLER:
+Ad Soyad: ${data.ad} ${data.soyad}
+E-posta: ${data.email}
+Telefon: ${data.tel}
+Şehir: ${data.sehir}
+${data.linkedin ? 'LinkedIn: ' + data.linkedin : ''}
+Başvurulan Pozisyon: ${data.pozisyon}
+
+İŞ DENEYİMİ:
+${expStr}
+
+EĞİTİM:
+${eduStr}
+
+BECERİLER: ${data.beceriler || 'Belirtilmedi'}
+SERTİFİKA/ÖDÜL: ${data.sertifika || 'Belirtilmedi'}
+
+KURALLAR:
+1. CV'yi şu bölümlerle yapılandır: Özet (3-4 güçlü cümle), Deneyim, Eğitim, Beceriler${data.sertifika ? ', Sertifikalar' : ''}
+2. Her iş deneyimi için güçlü eylem fiilleri kullan (geliştirdi, artırdı, yönetti, vb.)
+3. Mümkünse sayısal başarılar ekle (%20 artış, 50+ müşteri gibi) — verilmemişse makul tahminler kullan
+4. Hedef pozisyona uygun anahtar kelimeler ekle
+5. Sadece CV metnini yaz, başka yorum veya açıklama ekleme`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const json = await res.json();
+      lastCV = json.content?.map(c => c.text || '').join('') || 'Hata oluştu, lütfen tekrar deneyin.';
+      document.getElementById('cvText').textContent = lastCV;
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('cvOutput').style.display = 'block';
+    } catch (e) {
+      document.getElementById('cvText').textContent = 'Bağlantı hatası oluştu. Lütfen tekrar deneyin.';
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('cvOutput').style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '✨ Yapay Zeka ile CV Oluştur';
+    document.getElementById('cvOutput').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function copyCV() {
+    navigator.clipboard.writeText(lastCV).then(() => {
+      const btn = event.target;
+      btn.textContent = 'Kopyalandı ✓';
+      setTimeout(() => { btn.textContent = 'Kopyala'; }, 2000);
+    });
+  }
+
+  function downloadPDF() {
+    if (!lastCV) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const ad = (document.getElementById('ad').value + ' ' + document.getElementById('soyad').value).trim() || 'CV';
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    doc.setTextColor(30, 30, 30);
+
+    const lines = doc.splitTextToSize(lastCV, maxWidth);
+    let y = margin;
+    const lineHeight = 6;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    lines.forEach(line => {
+      if (y + lineHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      const isBold = /^[A-ZÜÇŞĞİÖa-züçşğıö\s]+:?\s*$/.test(line.trim()) && line.trim().length < 40;
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      doc.text(line, margin, y);
+      y += lineHeight;
+    });
+
+    doc.save(`${ad.replace(/\s/g, '_')}_CV.pdf`);
+  }
+
+  // İlk yüklemede 1 deneyim ve 1 eğitim alanı aç
+  addExp();
+  addEdu();
+</script>
+</body>
+</html>
